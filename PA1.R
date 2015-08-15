@@ -1,22 +1,10 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+library(ggplot2)
 
 
-## Loading and preprocessing the data
-
-```{r, echo=TRUE }
 # unzip activity.zip file
 unzip("activity.zip")
 # read activity.csv file call activity monitoring data = amd
 amd <- read.csv("activity.csv", sep=",")
-```
-
-## What is mean total number of steps taken per day?
-```{r, echo=TRUE, fig.height=8, fig.width= 10}
 
 #  ignore the missing values in the dataset and sum steps and date
 total_step <- tapply(amd$steps, amd$date, sum, na.rm = TRUE)
@@ -31,30 +19,22 @@ mean(total_step)
 median(total_step)
 
 
-```
-
-
-## What is the average daily activity pattern?
-```{r, echo=TRUE, fig.height=8, fig.width= 10}
-
 # find the average number of steps for all days
 amd$interval <- as.factor(amd$interval)
-step_average <- tapply(amd$steps, amd$interval, sum, na.rm = TRUE)/length(levels(amd$date))
+step_average <- tapply(amd$steps, amd$interval, sum, na.rm = TRUE, 
+                       simplify = TRUE)/length(levels(amd$date))
 # plot the Average number of steps taken in 5-minute interval across all days
 plot(x = levels(amd$interval), y = step_average, type = "l", xlab = "Time", 
      ylab = "Number of steps", main = "Average number of steps taken in 5-minute interval across all days")
 
 # find the maximum number of steps on average
 names(which.max(step_average))
-```
 
-## Imputing missing values
-```{r, echo=TRUE, fig.height=8, fig.width= 10}
 
-# find total number of missing values = na_number
 na_number <- sum(!complete.cases(amd$steps))
 
-# fill na with average steps
+
+
 original_data <- amd
 for (i in 1:length(amd$steps)) {
   if (is.na(amd$steps[i])) {
@@ -66,25 +46,17 @@ for (i in 1:length(amd$steps)) {
 }
 clean_data <- amd
 
-clean_step_sum <- tapply(clean_data$steps, clean_data$date, sum, na.rm = TRUE)
-# create the histogram with fill na
-
+clean_step_sum <- tapply(clean_data$steps, clean_data$date, sum, na.rm = TRUE, 
+                         simplify = TRUE)
 hist(clean_step_sum, xlab = "number of steps", main = "Histogram of the total number of steps taken each day")
 
-# find the mean and median total number of steps taken per day
+
 mean(clean_step_sum)
 
 median(clean_step_sum)
-```
 
-###Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
-* No difference in median but we see a difference in mean. 
 
-## Are there differences in activity patterns between weekdays and weekends?
 
-```{r, echo=TRUE, fig.height=8, fig.width= 10}
-
-# create a factor variable in the dataset with two levels - "weekday" and "weekend".
 weekday <- weekdays(as.Date(clean_data$date, "%Y-%m-%d"))
 for (i in 1:length(weekday)) {
   if ((weekday[i] == "Saturday") | (weekday[i] == "Sunday")) 
@@ -92,29 +64,18 @@ for (i in 1:length(weekday)) {
 }
 clean_data$weekday <- as.factor(weekday)
 
+
 clean_data2 <- split(clean_data, clean_data$weekday)
 weekday <- clean_data2$weekday
 weekend <- clean_data2$weekend
 step_average_weekday <- tapply(weekday$steps, weekday$interval, sum, simplify = TRUE)/(length(weekday$weekday)/288)
 step_average_weekend <- tapply(weekend$steps, weekend$interval, sum, simplify = TRUE)/(length(weekend$weekday)/288)
 
-# create data out for the time series plot
 output <- data.frame(steps = c(step_average_weekday, step_average_weekend), 
                      
                      interval = c(levels(amd$interval), levels(amd$interval)), weekday = as.factor(c(rep("weekday", 
                                                                                                                    length(step_average_weekday)), rep("weekend", length(step_average_weekend)))))
 
-#panel plot time series 
 library(lattice)
-xyplot(steps ~ interval | weekday, data = output, type = "l",layout = c(1, 2), ylab = "Number of steps", xlab="Interval",
+xyplot(steps ~ interval | weekday, data = output, type = "l",layout = c(1, 2), ylab = "Number of steps", 
        main = "Average number of steps for all weekday days or weekend days")
-
-
-```
-
-
-
-
-
-
-
